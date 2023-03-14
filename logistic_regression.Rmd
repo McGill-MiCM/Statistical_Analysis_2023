@@ -1,0 +1,168 @@
+---
+title: "Intro to logistic regression, MiCM Spring 2023 Workshop"
+author: "Alex Diaz-Papkovich"
+date: "March 17, 2023"
+output:
+  html_document:
+    #github_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The log function
+
+As a basic review of the $\log$ function:
+
+* It is the inverse of exponentiation
+* Unless otherwise stated, assume $\log$ refers to that natural logarithm with base $e$, sometimes written $\ln$
+* $\log(1) = 0$
+* $\log(0)$ is undefined
+* $\log(x*y) = \log(x) + \log(y)$
+* $\log(x/y) = \log(x) - \log(y)$
+* $\exp(\log(x)) = x$
+
+## The binomial distribution
+
+The binomial distribution models a situation where we have multiple independent Bernoulli trials---trials with binary success/failure outcomes. We have three parameters:
+* $y$, the observed number of successes
+* $n$, the total number of trials
+* $p$, the probability of success
+
+The probability mass function is:
+
+$$
+P(Y=y) = {n \choose y}p^y(1-p)^{n-y}
+$$
+
+For example, if a drug has $90\%$ of clearing an infection and we have $100$ patients, what is the probability that exactly $90$ patients are cleared of their infection? This is expressed mathematically as:
+
+$$
+P(Y=90) = {100 \choose 90}(0.9)^{90}(0.1)^{10}
+$$
+
+In R, we can calculate the value directly with `choose(100,90)*(0.9)^(90)*(0.1)^(10)` or (more usefully) with `dbinom(90, 100, 0.9)`. The value should be `0.1318653`.
+
+We can also calculate the probability that $90$ or more patients are cleared by summing up these values. We can do this either by summing the probability that $90$, ..., $100$ are cleared, or using the `pbinom` function.
+
+```{r Binomial distribution}
+# Calculate the probability of exactly 90 patients clearing an infection
+dbinom(90, 100, 0.9)
+
+# Calculate the probability of 90 or more (i.e. 90, 91, ..., 100) patients clearing an infection
+sum(dbinom(x = 90:100, size = 100, prob = 0.9))
+
+# Equivalently, calculate the probability that 90 or more (i.e. more than 89) clear an infection
+pbinom(89, 100, 0.9, lower.tail = F)
+```
+
+We will not go deep into the binomial distribution, though it is very useful. What we are interested in is estimating the value $p$, which we don't know, in the context of binary or count data. We typically have either a count of all events summarized in a table (e.g. in the form of a [contingency table](https://en.wikipedia.org/wiki/Contingency_table)) or as a list of binary events (e.g. survival data by by drug).
+
+## Logistic regression
+
+Assume that we have binary outcome data ($y$) and explanatory variables ($\mathbf{x}$) for each observation. Each observation is a Bernoulli trial where $y=1$ with a probability $\pi$ and $y=0$ with a probability $(1-\pi)$. Each observation is a **Bernoulli trial**. We believe that the probability of success ($y=1$) is related to $x$, so we write $\pi$ as $\pi(x)$. Since we have many Bernoulli trials, which we assume are independent, our data follow the Binomial distribution.
+
+Like with linear regression, we have $n$ observations and $p$ covariates. An individual observation is called a **case**, and when all explanatory covariates match among cases, we call it a **constellation** (personal note: I haven't heard this term used often---I've heard "class", "group", "crosstab", etc). Some examples:
+
+* Survival data ($y=1$ if a patient lived, $y=0$ if they died) by sex ($x_1=1$ for male, $x_1=0$ for female) and treatment ($x_2=1$ for treatment, $x_2=0$ for placebo)
+* Vaccine data ($y=1$ if a patient becomes infected) by vaccination status ($x_1=1$ if they were vaccinated)
+
+For a case $i$, we write their explanatory variables as $\mathbf{x}_i=(x_{i1},x_{i2},\dots,x_{ip})'$, and our function of the probability of success as $\pi=\pi(\mathbf{x}_i)$.
+
+
+The specifics of the notation (i.e. subscripts) will change depending on how the problem is formulated, but generally our binomial probability looks like this:
+
+$$
+P(Y=y) = {n \choose y}[\pi(\mathbf{x})]^{y}[1-\pi(\mathbf{x})]^{n-y}
+$$
+We are interested in estimating $\pi(\mathbf{x})$; we wish to link the probability $\pi$ to the covariates $\mathbf{x} = x_1, \dots, x_p$. We do this by selecting a **link function**. We would like a function in which:
+
+* $\pi$ depends on $\mathbf{x}$ in a linear manner, because linear functions have nice properties
+* $\pi$ falls within the values $[0,1]$, since it is a probability.
+
+There are many link functions. We will use the **logistic function** or the **logit**. It takes the form:
+
+$$
+\pi(\mathbf{x}) = \frac{1}{1 + e^{-\mathbf{x}'\mathbf{\beta}}}  
+$$ 
+
+It looks like this:
+
+```{r The logistic curve}
+curve(1/(1+exp(-x)), from=-5, to=5,  xlab="Explanatory variable x", ylab=expression(pi(x)~"=P(Y=1)"))
+```
+
+There are other link functions, such as the probit, complementary log-log (cloglog), the log-log, etc. The logit has some nice properties:
+
+* It is symmetric
+* It has simpler theoretical properties
+* It is easier to interpret as the log of odds ratios
+* It can be used in estimates either prospectively or retrospectively
+
+## Interpreting logistic regression
+
+Through some algebra, we can re-arrange the logit equation to get:
+
+$$
+\ln\frac{\pi(\mathbf{x})}{1-\pi(\mathbf{x})} = \mathbf{x}'\mathbf{\beta} = \beta_0 + \beta_1x_1 + ... + \beta_px_p
+$$
+Here $\frac{\pi(\mathbf{x})}{1- \pi(\mathbf{x})}$ is our **log-odds**. We can also exponentiate both sides to get our **odds**:
+
+$$
+\frac{\pi(\mathbf{x})}{1-\pi(\mathbf{x})} = \exp(\mathbf{x}'\mathbf{\beta}) = \exp(\beta_0 + \beta_1x_1 + ... + \beta_px_p)
+$$
+The odds are the ratio of the probability of something happening versus not happening. If $\pi=0.5$, both events are equally likely and the odds are $1$. If the probability is higher, then the odds will be greater than $1$; if it is lower, the odds are below $1$. For example, if $\pi=0.75$, then our ratio is $0.75/0.25 = 3$. 
+
+Often we are interested in how a change in the explanatory variables impacts the value of $\pi$. Usually we do this by keeping all variables fixed and incrementing one of them. For illustration, assume we have a simple case with two groups: those who received a drug (indicated with $i=1$), and those who did not (indicated with $i=0$). We are interested in $\pi_i$, the probability of survival of each group.
+
+Our logistic regression model is:
+
+$$
+\log(\frac{\pi_i}{1-\pi_i}) = \beta_0 + \beta_1x_{i1}, \text{ for groups } i=\{0,1\}
+$$
+
+If someone did not receive a drug, then we have:
+
+$$
+\log(\frac{\pi_0}{1-\pi_0}) = \beta_0 + \beta_1(0) = \beta_0
+$$
+
+If they did, then we have:
+
+$$
+\log(\frac{\pi_1}{1-\pi_1}) = \beta_0 + \beta_1
+$$
+
+In this case we have:
+
+* $\beta_0$, our log-odds of survival if someone did not receive a drug
+* $\beta_1$, our log-odds of survival if someone did receive a drug
+
+We can compare these two and use some algebra of logarithms to get our log odds ratio:
+
+$$
+\begin{aligned}
+& \log(\frac{\pi_1}{1-\pi_1}) - \log(\frac{\pi_0}{1-\pi_0}) \\
+&=\log(\frac{\pi_1/(1-\pi_1)}{\pi_0/(1-\pi_0)}) \\
+&= (\beta_1 + \beta_0) - \beta_0 \\
+&= \beta_1 \\
+\end{aligned}
+$$
+In this case, $\beta_1$ is the log-odds ratio of survival for those given the drug versus not given the drug. To calculate the odds radio, we use $\exp(\beta_1)$.
+
+Finally, we can re-arrange everything to get our **probability of success**:
+
+$$
+\pi(\mathbf{x}) = \frac{\exp(\beta_0 + \beta_1x_1 + ... + \beta_px_p)}{1 + \exp(\beta_0 + \beta_1x_1 + ... + \beta_px_p)}
+$$
+
+Unlike odds, this value gives us the direct interpretation of how likely something is to happen. This can be useful to give more meaning to a rare event that may become more likely through a higher odds ratio.
+
+
+
+
+
