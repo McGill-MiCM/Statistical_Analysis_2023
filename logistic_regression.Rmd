@@ -60,7 +60,7 @@ sum(dbinom(x = 90:100, size = 100, prob = 0.9))
 pbinom(89, 100, 0.9, lower.tail = F)
 ```
 
-We will not go deep into the binomial distribution, though it is very useful. What we are interested in is estimating the value $p$, which we don't know, in the context of binary or count data. We typically have either a count of all events summarized in a table (e.g. in the form of a [contingency table](https://en.wikipedia.org/wiki/Contingency_table)) or as a list of binary events (e.g. survival data by by drug).
+We will not go deep into the binomial distribution, though it is very useful. What we are interested in is estimating the value $p$, which we don't know, in the context of binary or count data. We typically have either a count of all events summarized in a table (e.g. in the form of a [contingency table](https://en.wikipedia.org/wiki/Contingency_table)) or as a list of binary events (e.g. survival data with associated variables like drug treatment, sex, age, etc).
 
 ## Logistic regression
 
@@ -71,7 +71,7 @@ Like with linear regression, we have $n$ observations and $p$ covariates. An ind
 * Survival data ($y=1$ if a patient lived, $y=0$ if they died) by sex ($x_1=1$ for male, $x_1=0$ for female) and treatment ($x_2=1$ for treatment, $x_2=0$ for placebo)
 * Vaccine data ($y=1$ if a patient becomes infected) by vaccination status ($x_1=1$ if they were vaccinated)
 
-For a case $i$, we write their explanatory variables as $\mathbf{x}_i=(x_{i1},x_{i2},\dots,x_{ip})'$, and our function of the probability of success as $\pi=\pi(\mathbf{x}_i)$.
+We write the explanatory variables as $\mathbf{x}=(x_{1},x_{2},\dots,x_{p})'$, and our function of the probability of success as $\pi=\pi(\mathbf{x}_i)$.
 
 
 The specifics of the notation (i.e. subscripts) will change depending on how the problem is formulated, but generally our binomial probability looks like this:
@@ -128,7 +128,11 @@ $$
 If someone did not receive a drug, then we have:
 
 $$
-\log(\frac{\pi_0}{1-\pi_0}) = \beta_0 + \beta_1(0) = \beta_0
+\begin{aligned}
+&\log(\frac{\pi_0}{1-\pi_0}) \\
+&= \beta_0 + \beta_1(0) \\
+&= \beta_0
+\end{aligned}
 $$
 
 If they did, then we have:
@@ -152,7 +156,7 @@ $$
 &= \beta_1 \\
 \end{aligned}
 $$
-In this case, $\beta_1$ is the log-odds ratio of survival for those given the drug versus not given the drug. To calculate the odds radio, we use $\exp(\beta_1)$.
+In this case, $\beta_1$ is the log-odds ratio of survival for those given the drug versus not given the drug. To calculate the odds radio, we use $\exp(\beta_1)$. **We are usually most interested in this type of analysis**.
 
 Finally, we can re-arrange everything to get our **probability of success**:
 
@@ -162,7 +166,90 @@ $$
 
 Unlike odds, this value gives us the direct interpretation of how likely something is to happen. This can be useful to give more meaning to a rare event that may become more likely through a higher odds ratio.
 
+For brevity, we will omit the derivations of various estimators. We use similar notation to linear regression, where $\hat{\beta}$ represents the estimate of $\beta$.
+
+## The `glm` function
+
+Logistic regression in R is done with the `glm` function. Its syntax and output are similar to the `lm` function, although we have to specify the family and link function. In this case, we will use the `binomial` family and `logit` link function. The typical setup is:
+
+`model.name <- glm(RESPONSE ~ COVARIATES, family = binomial(link=logit), data = dataframename)`
+
+As with linear regression, we can use the `summary` function, as well as `predict`.
+
+### Example
+
+Consider an example where we have 
 
 
+
+Consider a simple case, where we have a contingency table of cardiovascular disease (CVD) in $3,112$ women from American Samoa. The women were classified as "obese" or "non-obese" and were tracked for whether they died of CVD. The data are available in the `Sleuth3` package (specifically `Sleuth3::case1801`). We want to test if obesity in this data is a significant predictor of CVD death.
+
+Our table is:
+
+```
+#           Deaths NonDeaths
+# Obese     16     2045
+# NotObese  7      1044
+```
+
+```{r Obesity and CVD logistic model}
+# Create a table out of our Deaths and NonDeaths 
+cvd.data <- cbind(Sleuth3::case1801$Deaths,Sleuth3::case1801$NonDeaths)
+
+# Model the contingency data
+cvd.model <- glm(cvd.data ~ Sleuth3::case1801$Obesity, family = binomial(link = "logit"))
+
+# Check the summary of our model
+summary(cvd.model)
+
+# Check the residual Deviance
+print(paste("Residual Deviance", cvd.model$deviance))
+```
+Running our analysis, we see the Obesity level "Obese" has a p-value of $0.734$, which is not significant.
+
+### Haberman data
+We will use Haberman's survival data.^[Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.] It is a record of breast cancer patients who underwent surgery. The attributes are:
+
+1. Age of patient at time of operation (numerical)
+2. Patient's year of operation (year - 1900, numerical)
+3. Number of positive axillary nodes detected (numerical)
+4. Survival status (class attribute)
+
+|   1 = the patient survived 5 years or longer
+|   2 = the patient died within 5 years
+
+```{r Read in Haberman data}
+haberman.data <- read.csv("haberman.data", header=F)
+colnames(haberman.data) <- c("age","surgery_year","nodes","survival_status")
+
+# recode the survival status to 1 (lived 5+ years)  and 0 (died within 5 years)
+haberman.data$survival_status <- ifelse(haberman.data$survival_status==2,0,1)
+```
+
+The first thing we may be interested in is plotting our data.
+
+```{r Plot Haberman data against variables}
+plot(haberman.data$nodes, haberman.data$survival_status)
+plot(haberman.data$age, haberman.data$nodes)
+plot(haberman.data$age, haberman.data$survival_status)
+```
+
+
+```{r}
+haberman.model1 <- glm(survival_status ~ nodes,
+                       family=binomial(link = "logit"),
+                       data = haberman.data)
+
+summary(haberman.model1)
+```
+
+```{r}
+plot(haberman.data$nodes, haberman.data$survival_status, xlim = c(0,60))
+
+newdata <- data.frame(nodes=seq(min(haberman.data$nodes), max(haberman.data$nodes),len=500))
+newdata$pred = predict(haberman.model1, newdata, type="response")
+
+lines(pred ~ nodes, newdata)
+```
 
 
