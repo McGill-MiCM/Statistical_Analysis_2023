@@ -178,34 +178,59 @@ As with linear regression, we can use the `summary` function, as well as `predic
 
 ### Example
 
-Consider an example where we have 
+Consider a toy example where we simulate two populations: one that is given a drug that increases the chance of survival, and another that is given a placebo, which has a low chance of survival.
 
+```{r Toy example of logistic regression, echo=F}
 
+# Simulate a study where 50 people are given a drug and 50 people are given a placebo
+# Those given the treatment have a 70% chance of survival
+# Those given the placebo have a 20% chance of survival
+# We randomly draw values of 1/0 from the binomial distribution
+# Here, 1 indicates survival and 0 indicates death
+set.seed(20230317)
 
-Consider a simple case, where we have a contingency table of cardiovascular disease (CVD) in $3,112$ women from American Samoa. The women were classified as "obese" or "non-obese" and were tracked for whether they died of CVD. The data are available in the `Sleuth3` package (specifically `Sleuth3::case1801`). We want to test if obesity in this data is a significant predictor of CVD death.
+pop1_size <- 50
+pop2_size <- 50
 
-Our table is:
+pop_place <- rbinom(pop1_size,1,0.2)
+pop_treat <- rbinom(pop2_size,1,0.7)
 
+pop_sim <- data.frame(c(rep("placebo",pop1_size),rep("drug",pop2_size)),c(pop_place, pop_treat))
+colnames(pop_sim) <- c("treatment","survived")
+
+sim_glm <- glm(survived ~ treatment, family = binomial(link="logit"), data = pop_sim)
 ```
-#           Deaths NonDeaths
-# Obese     16     2045
-# NotObese  7      1044
+
+```{r Examine the results of our toy model}
+summary(sim_glm)
+confint(sim_glm)
+exp(confint(sim_glm))
+
+# The values of our betas
+beta_0 <- summary(sim_glm)$coefficients[1,1]
+beta_1 <- summary(sim_glm)$coefficients[2,1]
+
+# Our odds of survival for the placebo:
+print(paste("Odds of survival for placebo",exp(beta_0 + beta_1)))
+
+# Our odds of survival for the drug:
+print(paste("Odds of survival for treatment",exp(beta_0)))
+
+# Find the probability of survival for the placebo:
+print(paste("Probability of survival for placebo",(exp(beta_0 + beta_1)/(1 + exp(beta_0 + beta_1)))))
+
+# Find the probability of survival for the treatment:
+print(paste("Probability of survival for treatment",exp(beta_0)/(1 + exp(beta_0))))
+
+#anova(sim_glm, test = "Chisq")
+#dchisq(38.63925,1)
 ```
 
-```{r Obesity and CVD logistic model}
-# Create a table out of our Deaths and NonDeaths 
-cvd.data <- cbind(Sleuth3::case1801$Deaths,Sleuth3::case1801$NonDeaths)
+There are a few things to note:
 
-# Model the contingency data
-cvd.model <- glm(cvd.data ~ Sleuth3::case1801$Obesity, family = binomial(link = "logit"))
-
-# Check the summary of our model
-summary(cvd.model)
-
-# Check the residual Deviance
-print(paste("Residual Deviance", cvd.model$deviance))
-```
-Running our analysis, we see the Obesity level "Obese" has a p-value of $0.734$, which is not significant.
+* We have a z-statistic instead of a t-statistic like in linear regression
+* We do not have an $R^2$ value or F-statistic, but instead null and residual deviances
+* We also have an AIC 
 
 ### Haberman data
 We will use Haberman's survival data.^[Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.] It is a record of breast cancer patients who underwent surgery. The attributes are:
@@ -234,9 +259,12 @@ plot(haberman.data$age, haberman.data$nodes)
 plot(haberman.data$age, haberman.data$survival_status)
 ```
 
+#### Exercises:
 
-```{r}
-haberman.model1 <- glm(survival_status ~ nodes,
+Create a logistic model in R that models survival status against each of the variables in the data
+
+```{r, echo=F}
+haberman.model1 <- glm(...,
                        family=binomial(link = "logit"),
                        data = haberman.data)
 
@@ -244,12 +272,19 @@ summary(haberman.model1)
 ```
 
 ```{r}
-plot(haberman.data$nodes, haberman.data$survival_status, xlim = c(0,60))
+#plot(haberman.data$nodes, haberman.data$survival_status, xlim = c(0,60))
 
-newdata <- data.frame(nodes=seq(min(haberman.data$nodes), max(haberman.data$nodes),len=500))
-newdata$pred = predict(haberman.model1, newdata, type="response")
+#newdata <- data.frame(nodes=seq(min(haberman.data$nodes), max(haberman.data$nodes),len=500))
+#newdata$pred = predict(haberman.model1, newdata, type="response")
 
-lines(pred ~ nodes, newdata)
+#lines(pred ~ nodes, newdata)
 ```
 
+### Exercises: Other datasets
+
+The following data are available in the `Sleuth3` package, which you can install using `install.packages("Sleuth3")`:
+
+* `Sleuth3::case2002`: A 1972–1981 health survey in The Hague, Netherlands, discovered an association between keeping pet birds and increased risk of lung cancer. To investigate birdkeeping as a risk factor, researchers conducted a case–control study of patients in 1985 at four hospitals in The Hague (population 450,000). They identified 49 cases of lung cancer among the patients who were registered with a general practice, who were age 65 or younger and who had resided in the city since 1965. They also selected 98 controls from a population of residents having the same general age structure.
+** Model the risk of lung cancer using the variables available. Compare different models.
+* 
 
