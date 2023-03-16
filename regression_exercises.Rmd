@@ -1,0 +1,96 @@
+---
+title: "Regression exercises, MiCM Fall 2022 Workshop"
+author: "Alex Diaz-Papkovich"
+date: "10/10/2022"
+output: html_document
+---
+
+### An exercise in screwing up
+
+This exercise will show you the importance of variable types in R. Say we have three groups of data, labelled 1, 2, and 3. Each of these groups has a different mean. We will try to run a regression on our data and see what the result is.
+
+```{r How to screw up}
+set.seed(20221011)
+# Generate our data
+x1 <- rnorm(100, mean = 170, sd = 20)
+x2 <- rnorm(100, mean = 140, sd = 20)
+x3 <- rnorm(100, mean = 200, sd = 20)
+x <- c(x1, x2, x3)
+
+# Generate our labels
+labels <- c(rep(1, 100), rep(2, 100), rep(3, 100))
+
+# Create our data frame
+screwed_data <- data.frame(x, labels)
+colnames(screwed_data) <- c("measurement","group")
+
+# Run our linear regression model
+lm_screwed <- lm(measurement ~ group, data = screwed_data)
+
+summary(lm_screwed)
+
+```
+
+Our output is this:
+
+```
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  137.656      4.522  30.441  < 2e-16 ***
+group         16.384      2.093   7.827  8.8e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+
+What's the problem with the `group` variable? How would you fix it? When you figure it out, you'll recognize one of the most common mistakes when coding analyses in R.
+
+### Exercises with data
+
+We're going to look at ANOVA versus regression. Load the `PlantGrowth` data again. Create an ANOVA (using `lm`) and a linear regression model (using `lm`) on the variables `weight` versus `group`. Look at the R objects and run `summary` on both. Do you notice any numbers in common?
+
+```{r ANOVA vs regression}
+data("PlantGrowth") # Load the data (it may take a second)
+
+# 
+#plant_anova <- aov(... , data = PlantGrowth)
+#plant_regression <- lm(..., data = PlantGrowth)
+
+print("ANOVA results")
+#plant_anova
+
+print("ANOVA summary")
+#summary(plant_anova)
+
+print("Linear regression results")
+#plant_regression
+
+print("Linear regression summary")
+#summary(plant_regression)
+
+```
+
+We're going to look at data from a real study: *Giardiello, Francis M., et al. "Treatment of colonic and rectal adenomas with sulindac in familial adenomatous polyposis." New England Journal of Medicine 328.18 (1993): 1313-1316.*
+
+The data for this study is in the `medicaldata` library, under `medicaldata::polyps`. The documentation for all data can be found at: https://cran.r-project.org/web/packages/medicaldata/medicaldata.pdf.
+
+Load the data and run a regression on the variable `number12m` against the variable `treatment`. How would you interpret the results?
+```{r Regression exercise, polyps}
+df_polyps <- medicaldata::polyps
+
+lm_polyps <- lm(number12m ~ treatment, data = medicaldata::polyps)
+summary(lm_polyps)
+```
+
+In addition to these variables, you also have a baseline number of polyps for each patient (`baseline`), as well as their age (`age`) and sex (`sex`). Create a regression model that includes these variables as well. How do you interpret these results?
+
+```{r Multiple linear regression exercise, polyps, with more variables}
+#lm_polyps_multiple <- lm(..., data = medicaldata::polyps)
+lm_polyps_multiple <- lm(number12m ~ baseline + treatment + age + sex, data = medicaldata::polyps)
+
+summary(lm_polyps_multiple)
+```
+
+Check the residuals using the `plot` command. Do your residuals look okay?
+```{r Check residuals}
+plot(lm_polyps_multiple)
+```

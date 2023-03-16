@@ -1,0 +1,33 @@
+---
+title: "R concepts exercises"
+author: "Alex Diaz-Papkovich"
+date: "03/17/2023"
+output: html_document
+---
+
+Exercise 1: Create a data frame from the vectors provided. Name the columns "age", "sex", "location"
+
+```{r Exercise 1}
+
+v1 <- c("20","27","26","24","27","18","22","23","24","29")
+v2 <- c("M","M","F","F","M","M","F","F","M","F")
+v3 <- c("Ottawa","Ottawa","Montreal","Vancouver","Toronto","Halifax","Toronto","Calgary","Montreal","Toronto")
+
+```
+
+Exercise 2: Convert the columns for age, sex, and location to `numeric`,`factor`, and `factor`, respectively.
+
+```{r Exercise 2}
+```
+
+Exercise 3: Add an observation to your data.
+
+```{r Exercise 3}
+```
+
+Exercise 4: Half of the individuals have been assigned a treatment, and another half a placebo. Add a column of `logical` values called "treatment" using `cbind` or `cbind.data.frame`.
+
+```{r Exercise 4}
+v4 <- c(rep(TRUE,5), rep(FALSE,5))
+```
+

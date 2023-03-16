@@ -203,27 +203,27 @@ sim_glm <- glm(survived ~ treatment, family = binomial(link="logit"), data = pop
 
 ```{r Examine the results of our toy model}
 summary(sim_glm)
-confint(sim_glm)
-exp(confint(sim_glm))
+#confint(sim_glm)
+#exp(confint(sim_glm))
 
 # The values of our betas
-beta_0 <- summary(sim_glm)$coefficients[1,1]
-beta_1 <- summary(sim_glm)$coefficients[2,1]
+#beta_0 <- summary(sim_glm)$coefficients[1,1]
+#beta_1 <- summary(sim_glm)$coefficients[2,1]
 
 # Our odds of survival for the placebo:
-print(paste("Odds of survival for placebo",exp(beta_0 + beta_1)))
+#print(paste("Odds of survival for placebo",exp(beta_0 + beta_1)))
 
 # Our odds of survival for the drug:
-print(paste("Odds of survival for treatment",exp(beta_0)))
+#print(paste("Odds of survival for treatment",exp(beta_0)))
 
 # Find the probability of survival for the placebo:
-print(paste("Probability of survival for placebo",(exp(beta_0 + beta_1)/(1 + exp(beta_0 + beta_1)))))
+#print(paste("Probability of survival for placebo",(exp(beta_0 + beta_1)/(1 + exp(beta_0 + beta_1)))))
 
 # Find the probability of survival for the treatment:
-print(paste("Probability of survival for treatment",exp(beta_0)/(1 + exp(beta_0))))
+#print(paste("Probability of survival for treatment",exp(beta_0)/(1 + exp(beta_0))))
 
 #anova(sim_glm, test = "Chisq")
-#dchisq(38.63925,1)
+#with(sim_glm, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
 ```
 
 There are a few things to note:
@@ -284,7 +284,8 @@ summary(haberman.model1)
 
 The following data are available in the `Sleuth3` package, which you can install using `install.packages("Sleuth3")`:
 
+* `Sleuth3::case2001`: In 1846 the Donner and Reed families left Springfield, Illinois, for California by covered wagon. In July, the Donner Party, as it became known, reached Fort Bridger, Wyoming. There its leaders decided to attempt a new and untested rote to the Sacramento Valley. Having reached its full size of 87 people and 20 wagons, the party was delayed by a difficult crossing of the Wasatch Range and again in the crossing of the desert west of the Great Salt Lake. The group became stranded in the eastern Sierra Nevada mountains when the region was hit by heavy snows in late October. By the time the last survivor was rescued on April 21, 1847, 40 of the 87 members had died from famine and exposure to extreme cold.
 * `Sleuth3::case2002`: A 1972–1981 health survey in The Hague, Netherlands, discovered an association between keeping pet birds and increased risk of lung cancer. To investigate birdkeeping as a risk factor, researchers conducted a case–control study of patients in 1985 at four hospitals in The Hague (population 450,000). They identified 49 cases of lung cancer among the patients who were registered with a general practice, who were age 65 or younger and who had resided in the city since 1965. They also selected 98 controls from a population of residents having the same general age structure.
-** Model the risk of lung cancer using the variables available. Compare different models.
-* 
+
+
 
