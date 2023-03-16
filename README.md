@@ -1,9 +1,9 @@
-# An introduction to statistics in R
+# Statistical analysis in R
 
 We will use the following pages:
 
-* [https://diazale.github.io/intro_to_r_stats/r_concepts.html](https://diazale.github.io/intro_to_r_stats/r_concepts.html)
-* [https://diazale.github.io/intro_to_r_stats/statistical_tests.html](https://diazale.github.io/intro_to_r_stats/statistical_tests.html)
-* [https://diazale.github.io/intro_to_r_stats/regression_workshop.html](https://diazale.github.io/intro_to_r_stats/regression_workshop.html) 
-* [https://diazale.github.io/intro_to_r_stats/regression_exercises.html](https://diazale.github.io/intro_to_r_stats/regression_exercises.html) 
-# micm_spring_2023
+* [https://diazale.github.io/micm_spring_2023/r_concepts.html](https://diazale.github.io/micm_spring_2023/r_concepts.html)
+* [https://diazale.github.io/micm_spring_2023/statistical_tests.html](https://diazale.github.io/micm_spring_2023/statistical_tests.html)
+* [https://diazale.github.io/micm_spring_2023/regression_workshop.html](https://diazale.github.io/micm_spring_2023/regression_workshop.html) 
+* [https://diazale.github.io/micm_spring_2023/regression_exercises.html](https://diazale.github.io/micm_spring_2023/regression_exercises.html) 
+* [https://diazale.github.io/micm_spring_2023/logistic_regression.html](https://diazale.github.io/micm_spring_2023/logistic_regression.html) 
