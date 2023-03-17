@@ -1,11 +1,10 @@
 ---
-title: "The t-test and hypothesis testing, MiCM Fall 2022 Workshop"
+title: "The t-test and hypothesis testing, MiCM Spring 2023 Workshop"
 author: "Alex Diaz-Papkovich"
-date: "03/17/2022"
+date: "03/17/2023"
 output: html_document
 ---
 
-## Hypothesis testing
 ### The t-test
 
 ```{r A basic example of the t-test}

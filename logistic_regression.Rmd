@@ -60,6 +60,33 @@ sum(dbinom(x = 90:100, size = 100, prob = 0.9))
 pbinom(89, 100, 0.9, lower.tail = F)
 ```
 
+One thing to consider is that even when we know the probability of an event happening, we don't know how many times it **will** happen. This is the fundamental nature of probability. If we simulate many runs of the same binomial probability, we'll get this:
+
+```{r Running the binomial many times, echo=F}
+set.seed(20230317)
+
+nruns <- 500
+nobs <- 100
+p_success <- 0.5
+
+# our simulation data
+sim_data <- rbinom(nruns, size = nobs, prob = p_success)
+
+hist(sim_data,
+     main = paste("Histogram of ",
+                  nruns,
+                  " runs of ",
+                  nobs,
+                  " trials with probability of success of ",
+                  p_success))
+
+print("Minimum of simulation data:")
+print(min(sim_data))
+print("Maximum of simulation data:")
+print(max(sim_data))
+```
+In this case, we have a probability of success of $0.5$ with $100$ trials---even odds between success and failure. Even though we expect $50$ successes, we have as few as $35$ and as many as $63$.
+
 We will not go deep into the binomial distribution, though it is very useful. What we are interested in is estimating the value $p$, which we don't know, in the context of binary or count data. We typically have either a count of all events summarized in a table (e.g. in the form of a [contingency table](https://en.wikipedia.org/wiki/Contingency_table)) or as a list of binary events (e.g. survival data with associated variables like drug treatment, sex, age, etc).
 
 ## Logistic regression
@@ -180,7 +207,7 @@ As with linear regression, we can use the `summary` function, as well as `predic
 
 Consider a toy example where we simulate two populations: one that is given a drug that increases the chance of survival, and another that is given a placebo, which has a low chance of survival.
 
-```{r Toy example of logistic regression, echo=F}
+```{r Toy example of logistic regression}
 
 # Simulate a study where 50 people are given a drug and 50 people are given a placebo
 # Those given the treatment have a 70% chance of survival
@@ -222,15 +249,45 @@ summary(sim_glm)
 # Find the probability of survival for the treatment:
 #print(paste("Probability of survival for treatment",exp(beta_0)/(1 + exp(beta_0))))
 
+# Test the 
 #anova(sim_glm, test = "Chisq")
 #with(sim_glm, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
 ```
 
-There are a few things to note:
+There are a few things to note when comparing this output to that of linear regression:
 
 * We have a z-statistic instead of a t-statistic like in linear regression
 * We do not have an $R^2$ value or F-statistic, but instead null and residual deviances
 * We also have an AIC 
+
+We can reformat this data to fit a contingency table:
+
+```{r Format our simulation data in a contingency table}
+pop_sim_cont <- data.frame(table(pop_sim)) # Aggregate our data into counts
+
+# Get our marginal counts.
+# We know we have 50 of each but it's good practice for coding
+total_drug <- sum(pop_sim_cont[pop_sim_cont["treatment"]=="drug",]$Freq)
+total_plac <- sum(pop_sim_cont[pop_sim_cont["treatment"]=="placebo",]$Freq)
+
+# Drop our death observations and attach the counts we just got instead
+pop_sim_cont <- subset(pop_sim_cont, survived==1)
+pop_sim_cont$survived <- pop_sim_cont$Freq # Set the variable "survived" to a count
+pop_sim_cont <- pop_sim_cont[,c(1,2)]
+pop_sim_cont$patients <-with(pop_sim_cont,
+                             ifelse(treatment=="drug", total_drug, total_plac))
+
+# Add a variable of the response (the number of survived vs died)
+pop_sim_cont$resp <- cbind(pop_sim_cont$survived, pop_sim_cont$patients - pop_sim_cont$survived)
+
+```
+
+Now that our data is formatted as a contingency table, we can run the same analysis:
+
+```{r Run the GLM on the contingency table}
+sim_glm_cont <- glm(resp ~ treatment, family = binomial(link = "logit"), data = pop_sim_cont)
+summary(sim_glm_cont)
+```
 
 ### Haberman data
 We will use Haberman's survival data.^[Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.] It is a record of breast cancer patients who underwent surgery. The attributes are:
@@ -263,12 +320,12 @@ plot(haberman.data$age, haberman.data$survival_status)
 
 Create a logistic model in R that models survival status against each of the variables in the data
 
-```{r, echo=F}
-haberman.model1 <- glm(...,
-                       family=binomial(link = "logit"),
-                       data = haberman.data)
+```{r}
+#haberman.model1 <- glm(...,
+#                       family=binomial(link = "logit"),
+#                       data = haberman.data)
 
-summary(haberman.model1)
+#summary(haberman.model1)
 ```
 
 ```{r}

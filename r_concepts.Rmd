@@ -1,5 +1,5 @@
 ---
-title: "R concepts, MiCM Fall 2022 Workshop"
+title: "R concepts, MiCM Spring 2023 Workshop"
 author: "Alex Diaz-Papkovich"
 date: "03/17/2023"
 output: html_document
