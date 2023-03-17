@@ -1,7 +1,7 @@
 ---
 title: "The t-test and hypothesis testing, MiCM Spring 2023 Workshop"
 author: "Alex Diaz-Papkovich"
-date: "03/17/2023"
+date: "March 17, 2023"
 output: html_document
 ---
 
